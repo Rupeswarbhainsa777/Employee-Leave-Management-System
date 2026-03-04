@@ -19,12 +19,12 @@ public class LeaveController {
 
 
     @PostMapping
-    public ResponseEntity<LeaveRequest> appLeave(@RequestBody LeaveRequest request){
+    public ResponseEntity<?> appLeave(@RequestBody LeaveRequest request){
         return ResponseEntity.ok(leaveService.applyLeave(request));
     }
 
     @PutMapping("/approve/{id}")
-    public ResponseEntity<LeaveRequest> approve(@PathVariable Long id){
+    public ResponseEntity<?> approve(@PathVariable Long id){
         return ResponseEntity.ok(leaveService.approveLeave(id));
     }
 
@@ -37,6 +37,16 @@ public class LeaveController {
     @GetMapping("/all")
     public ResponseEntity<List<LeaveRequest>> getAll(){
         return ResponseEntity.ok(leaveService.getAll());
+    }
+
+    @GetMapping("/calendar")
+    public ResponseEntity<List<LeaveRequest>> getCalendar(
+            @RequestParam int year,
+            @RequestParam int month) {
+
+        return ResponseEntity.ok(
+                leaveService.getMonthlyCalendar(year, month)
+        );
     }
 
 

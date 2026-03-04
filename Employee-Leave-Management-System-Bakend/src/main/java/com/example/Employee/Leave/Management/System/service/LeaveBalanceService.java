@@ -5,6 +5,7 @@ import com.example.Employee.Leave.Management.System.entity.User;
 import com.example.Employee.Leave.Management.System.repository.LeaveBalanceRepository;
 import com.example.Employee.Leave.Management.System.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.Year;
@@ -13,7 +14,9 @@ import java.time.Year;
 @RequiredArgsConstructor
 public class LeaveBalanceService {
 
+    @Autowired
     private final LeaveBalanceRepository leaveBalanceRepository;
+    @Autowired
     private final UserRepository userRepository;
 
 
