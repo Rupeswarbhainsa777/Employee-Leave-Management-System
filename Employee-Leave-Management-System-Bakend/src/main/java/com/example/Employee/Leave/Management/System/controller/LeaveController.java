@@ -24,8 +24,13 @@ public class LeaveController {
     }
 
     @PutMapping("/approve/{id}")
-    public ResponseEntity<?> approve(@PathVariable Long id){
-        return ResponseEntity.ok(leaveService.approveLeave(id));
+    public ResponseEntity<?> approve(
+            @PathVariable Long id,
+            @RequestParam Long managerId) {
+
+        return ResponseEntity.ok(
+                leaveService.approveLeave(id, managerId)
+        );
     }
 
 

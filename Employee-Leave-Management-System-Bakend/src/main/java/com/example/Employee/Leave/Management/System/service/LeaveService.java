@@ -1,7 +1,9 @@
 package com.example.Employee.Leave.Management.System.service;
 
 import com.example.Employee.Leave.Management.System.entity.LeaveRequest;
+import com.example.Employee.Leave.Management.System.entity.User;
 import com.example.Employee.Leave.Management.System.repository.LeaveRepository;
+import com.example.Employee.Leave.Management.System.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -14,21 +16,37 @@ public class LeaveService {
     @Autowired
     private LeaveRepository leaveRepository;
 
+    @Autowired
+    private UserRepository userRepository;
+
+
     public LeaveRequest applyLeave(LeaveRequest leave) {
         leave.setStatus("PENDING");
         return leaveRepository.save(leave);
     }
 
-    public LeaveRequest approveLeave(Long id) {
-        LeaveRequest leave = leaveRepository.findById(id).orElseThrow();
+    // 🔥 ONLY MANAGER CAN APPROVE
+    public LeaveRequest approveLeave(Long leaveId, Long managerId) {
+
+        User manager = userRepository.findById(managerId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // ✅ Check role
+        if (!manager.getRole().equalsIgnoreCase("MANAGER")) {
+            throw new RuntimeException("Only Manager can approve leave");
+        }
+
+        LeaveRequest leave = leaveRepository.findById(leaveId)
+                .orElseThrow(() -> new RuntimeException("Leave not found"));
+
         leave.setStatus("APPROVED");
+
         return leaveRepository.save(leave);
     }
 
     public List<LeaveRequest> getPendingLeaves() {
         return leaveRepository.findByStatus("PENDING");
     }
-
 
     public List<LeaveRequest> getAll() {
         return leaveRepository.findAll();
