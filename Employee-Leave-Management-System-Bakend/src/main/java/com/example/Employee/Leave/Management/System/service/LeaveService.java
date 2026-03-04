@@ -5,6 +5,8 @@ import com.example.Employee.Leave.Management.System.repository.LeaveRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class LeaveService {
 
@@ -20,5 +22,14 @@ public class LeaveService {
         LeaveRequest leave = leaveRepository.findById(id).orElseThrow();
         leave.setStatus("APPROVED");
         return leaveRepository.save(leave);
+    }
+
+    public List<LeaveRequest> getPendingLeaves() {
+        return leaveRepository.findByStatus("PENDING");
+    }
+
+
+    public List<LeaveRequest> getAll() {
+        return leaveRepository.findAll();
     }
 }
