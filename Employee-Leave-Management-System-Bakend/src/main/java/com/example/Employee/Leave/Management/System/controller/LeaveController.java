@@ -28,6 +28,7 @@ public class LeaveController {
         return ResponseEntity.ok(leaveService.approveLeave(id));
     }
 
+
     @GetMapping("/pending")
     public ResponseEntity<List<LeaveRequest>> getPending(){
         return ResponseEntity.ok(leaveService.getPendingLeaves());
