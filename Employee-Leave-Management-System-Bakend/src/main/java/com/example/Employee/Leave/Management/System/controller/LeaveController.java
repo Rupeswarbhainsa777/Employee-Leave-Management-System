@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.List;
 
 @RestController
@@ -16,23 +17,27 @@ public class LeaveController {
     @Autowired
     private LeaveService leaveService;
 
-
-
+    // 🔥 Apply Leave (Login Required)
     @PostMapping
-    public ResponseEntity<?> appLeave(@RequestBody LeaveRequest request){
-        return ResponseEntity.ok(leaveService.applyLeave(request));
-    }
-
-    @PutMapping("/approve/{id}")
-    public ResponseEntity<?> approve(
-            @PathVariable Long id,
-            @RequestParam Long managerId) {
+    public ResponseEntity<?> applyLeave(
+            @RequestBody LeaveRequest request,
+            Principal principal){
 
         return ResponseEntity.ok(
-                leaveService.approveLeave(id, managerId)
+                leaveService.applyLeave(request, principal.getName())
         );
     }
 
+    // 🔥 Approve Leave (Only Manager)
+    @PutMapping("/approve/{id}")
+    public ResponseEntity<?> approve(
+            @PathVariable Long id,
+            Principal principal){
+
+        return ResponseEntity.ok(
+                leaveService.approveLeave(id, principal.getName())
+        );
+    }
 
     @GetMapping("/pending")
     public ResponseEntity<List<LeaveRequest>> getPending(){
@@ -53,7 +58,4 @@ public class LeaveController {
                 leaveService.getMonthlyCalendar(year, month)
         );
     }
-
-
 }
-

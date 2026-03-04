@@ -18,6 +18,7 @@ public interface LeaveRepository extends JpaRepository<LeaveRequest, Long> {
             "((l.startDate BETWEEN :start AND :end) OR " +
             "(l.endDate BETWEEN :start AND :end) OR " +
             "(l.startDate <= :start AND l.endDate >= :end))")
+
     List<LeaveRequest> findApprovedLeavesBetween(
             @Param("start") LocalDate start,
             @Param("end") LocalDate end

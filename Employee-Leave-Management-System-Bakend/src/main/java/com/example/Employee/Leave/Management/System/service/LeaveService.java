@@ -19,25 +19,34 @@ public class LeaveService {
     @Autowired
     private UserRepository userRepository;
 
+    // 🔥 Apply Leave (Login Required)
+    public LeaveRequest applyLeave(LeaveRequest leave, String email) {
 
-    public LeaveRequest applyLeave(LeaveRequest leave) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        leave.setUser(user);
         leave.setStatus("PENDING");
+
         return leaveRepository.save(leave);
     }
 
-    // 🔥 ONLY MANAGER CAN APPROVE
-    public LeaveRequest approveLeave(Long leaveId, Long managerId) {
+    // 🔥 Only Manager Can Approve
+    public LeaveRequest approveLeave(Long leaveId, String email) {
 
-        User manager = userRepository.findById(managerId)
+        User manager = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // ✅ Check role
         if (!manager.getRole().equalsIgnoreCase("MANAGER")) {
             throw new RuntimeException("Only Manager can approve leave");
         }
 
         LeaveRequest leave = leaveRepository.findById(leaveId)
                 .orElseThrow(() -> new RuntimeException("Leave not found"));
+
+        if (leave.getStatus().equalsIgnoreCase("APPROVED")) {
+            throw new RuntimeException("Leave already approved");
+        }
 
         leave.setStatus("APPROVED");
 
@@ -57,6 +66,7 @@ public class LeaveService {
         LocalDate start = LocalDate.of(year, month, 1);
         LocalDate end = start.withDayOfMonth(start.lengthOfMonth());
 
-        return leaveRepository.findApprovedLeavesBetween(start, end);
+        return leaveRepository.findApprovedLeavesBetween(
+                start, end);
     }
 }
