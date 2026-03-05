@@ -16,6 +16,7 @@ public class LeaveRequest {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private String employeeName;
     private String leaveType; // VACATION, SICK, PERSONAL, EMERGENCY
 
     private LocalDate startDate;

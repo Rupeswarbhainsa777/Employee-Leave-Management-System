@@ -26,18 +26,16 @@ public class User {
     @Column(unique = true)
     private String email;
 
-    @JsonIgnore
+
     private String password;
 
     private String role; // EMPLOYEE or MANAGER
 
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    @JsonIgnore
     private List<LeaveRequest> leaveRequests;
 
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    @JsonIgnore
     private List<LeaveBalance> leaveBalances;
 }
