@@ -1,6 +1,7 @@
 package com.example.Employee.Leave.Management.System.repository;
 
 import com.example.Employee.Leave.Management.System.entity.LeaveRequest;
+import com.example.Employee.Leave.Management.System.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -13,6 +14,7 @@ import java.util.List;
 public interface LeaveRepository extends JpaRepository<LeaveRequest, Long> {
 
     List<LeaveRequest> findByStatus(String status);
+    List<LeaveRequest> findByUser(User user);
 
     @Query("SELECT l FROM LeaveRequest l WHERE l.status = 'APPROVED' AND " +
             "((l.startDate BETWEEN :start AND :end) OR " +
@@ -23,4 +25,6 @@ public interface LeaveRepository extends JpaRepository<LeaveRequest, Long> {
             @Param("start") LocalDate start,
             @Param("end") LocalDate end
     );
+
+    List<LeaveRequest> findByUserId(Long userId);
 }

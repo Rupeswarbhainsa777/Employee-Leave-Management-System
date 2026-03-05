@@ -29,7 +29,7 @@ public class UserController {
         try {
             User user = userService.login(request.getEmail(), request.getPassword());
             if (user != null) {
-                user.setPassword(null); // don't return password
+                user.setPassword(null);
                 return ResponseEntity.ok(user);
             } else {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");

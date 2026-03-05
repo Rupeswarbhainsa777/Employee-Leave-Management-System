@@ -5,7 +5,6 @@ import com.example.Employee.Leave.Management.System.entity.User;
 import com.example.Employee.Leave.Management.System.repository.LeaveBalanceRepository;
 import com.example.Employee.Leave.Management.System.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.Year;
@@ -14,18 +13,14 @@ import java.time.Year;
 @RequiredArgsConstructor
 public class LeaveBalanceService {
 
-    @Autowired
     private final LeaveBalanceRepository leaveBalanceRepository;
-    @Autowired
     private final UserRepository userRepository;
-
 
     public LeaveBalance getLeaveBalance(Long userId, int year) {
 
         return leaveBalanceRepository.findByUserIdAndYear(userId, year)
                 .orElseGet(() -> createDefaultBalance(userId, year));
     }
-
 
     public LeaveBalance createDefaultBalance(Long userId, int year) {
 
@@ -53,25 +48,26 @@ public class LeaveBalanceService {
         int currentYear = Year.now().getValue();
         LeaveBalance balance = getLeaveBalance(userId, currentYear);
 
-        if (leaveType.equalsIgnoreCase("VACATION")) {
+        switch (leaveType.toUpperCase()) {
 
-            balance.setVacationUsed(balance.getVacationUsed() + days);
+            case "VACATION":
+                balance.setVacationUsed(balance.getVacationUsed() + days);
+                break;
 
-        } else if (leaveType.equalsIgnoreCase("SICK")) {
+            case "SICK":
+                balance.setSickUsed(balance.getSickUsed() + days);
+                break;
 
-            balance.setSickUsed(balance.getSickUsed() + days);
+            case "PERSONAL":
+                balance.setPersonalUsed(balance.getPersonalUsed() + days);
+                break;
 
-        } else if (leaveType.equalsIgnoreCase("PERSONAL")) {
+            case "EMERGENCY":
+                balance.setEmergencyUsed(balance.getEmergencyUsed() + days);
+                break;
 
-            balance.setPersonalUsed(balance.getPersonalUsed() + days);
-
-        } else if (leaveType.equalsIgnoreCase("EMERGENCY")) {
-
-            balance.setEmergencyUsed(balance.getEmergencyUsed() + days);
-
-        } else {
-
-            throw new RuntimeException("Invalid Leave Type");
+            default:
+                throw new RuntimeException("Invalid Leave Type");
         }
 
         leaveBalanceRepository.save(balance);

@@ -21,18 +21,18 @@ public class LeaveBalance {
 
     private int year;
 
-    private int vacationTotal;
-    private int vacationUsed;
 
-    private int sickTotal;
-    private int sickUsed;
+    private int vacationTotal = 20;
+    private int vacationUsed = 0;
 
-    private int personalTotal;
-    private int personalUsed;
+    private int sickTotal = 10;
+    private int sickUsed = 0;
 
-    private int emergencyTotal;
-    private int emergencyUsed;
+    private int personalTotal = 5;
+    private int personalUsed = 0;
 
+    private int emergencyTotal = 5;
+    private int emergencyUsed = 0;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)

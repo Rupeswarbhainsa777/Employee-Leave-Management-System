@@ -19,7 +19,7 @@ public class LeaveService {
     @Autowired
     private UserRepository userRepository;
 
-    // 🔥 Apply Leave (Login Required)
+
     public LeaveRequest applyLeave(LeaveRequest leave, String email) {
 
         User user = userRepository.findByEmail(email)
@@ -31,7 +31,7 @@ public class LeaveService {
         return leaveRepository.save(leave);
     }
 
-    // 🔥 Only Manager Can Approve
+
     public LeaveRequest approveLeave(Long leaveId, String email) {
 
         User manager = userRepository.findByEmail(email)
@@ -68,5 +68,15 @@ public class LeaveService {
 
         return leaveRepository.findApprovedLeavesBetween(
                 start, end);
+    }
+
+    public List<LeaveRequest> getMyLeaves(String email){
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        return leaveRepository.findByUser(user);
+    }
+    public List<LeaveRequest> getLeavesByUser(Long userId) {
+        return leaveRepository.findByUserId(userId);
     }
 }

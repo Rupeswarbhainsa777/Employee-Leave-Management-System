@@ -17,7 +17,7 @@ public class LeaveController {
     @Autowired
     private LeaveService leaveService;
 
-    // 🔥 Apply Leave (Login Required)
+
     @PostMapping
     public ResponseEntity<?> applyLeave(
             @RequestBody LeaveRequest request,
@@ -28,7 +28,15 @@ public class LeaveController {
         );
     }
 
-    // 🔥 Approve Leave (Only Manager)
+    @GetMapping("/my")
+    public ResponseEntity<List<LeaveRequest>> getMyLeaves(Principal principal){
+
+        return ResponseEntity.ok(
+                leaveService.getMyLeaves(principal.getName())
+        );
+    }
+
+
     @PutMapping("/approve/{id}")
     public ResponseEntity<?> approve(
             @PathVariable Long id,
@@ -57,5 +65,10 @@ public class LeaveController {
         return ResponseEntity.ok(
                 leaveService.getMonthlyCalendar(year, month)
         );
+    }
+
+    @GetMapping("/user/{userId}")
+    public List<LeaveRequest> getLeavesByUser(@PathVariable Long userId) {
+        return leaveService.getLeavesByUser(userId);
     }
 }
