@@ -5,7 +5,9 @@ const base_api = 'http://localhost:1005/api';
 
 let currentUser    = null;
 let approveLeaveId = null;
+let rejectLeaveId  = null;
 let bsApproveModal = null;
+let bsRejectModal  = null;
 let calYear  = new Date().getFullYear();
 let calMonth = new Date().getMonth() + 1;
 
@@ -140,18 +142,28 @@ async function login() {
             body: JSON.stringify({ email, password })
         });
 
+        console.log('[DEBUG] loginResponse:', JSON.stringify(loginResponse));
+
         const userData = loginResponse.user || loginResponse;
         currentUser = { ...userData, email, password };
 
-        if (!currentUser.id) {
-            const allUsers = await apiCall('/user/alluser');
-            const userList = Array.isArray(allUsers) ? allUsers : (allUsers.users || []);
-            const found = userList.find(u => u.email === email);
-            if (found) {
-                currentUser = { ...currentUser, ...found, password };
+        console.log('[DEBUG] currentUser after login:', JSON.stringify(currentUser));
+
+        if (!currentUser.id || !currentUser.role) {
+            try {
+                const allUsers = await apiCall('/user/alluser');
+                const userList = Array.isArray(allUsers) ? allUsers : (allUsers.users || []);
+                const found = userList.find(u => u.email === email);
+                if (found) {
+                    currentUser = { ...currentUser, ...found, password };
+                    console.log('[DEBUG] currentUser after alluser lookup:', JSON.stringify(currentUser));
+                }
+            } catch(lookupErr) {
+                console.warn('[DEBUG] alluser lookup failed:', lookupErr.message);
             }
         }
 
+        console.log('[DEBUG] Final currentUser.role:', currentUser.role);
         startApp();
     } catch(e) {
         showToast(e.message || 'Login failed', 'error');
@@ -159,7 +171,6 @@ async function login() {
 }
 
 //Starting of the application
-
 function startApp() {
     document.getElementById('auth-page').style.display = 'none';
     document.getElementById('app-page').style.display  = 'block';
@@ -167,19 +178,41 @@ function startApp() {
     document.getElementById('user-name-display').textContent = currentUser.name  || currentUser.email;
     document.getElementById('user-role-display').textContent = currentUser.role  || '';
 
+    // Always hide manager-only nav items first, then show only for MANAGER
+    document.getElementById('nav-pending').style.display    = 'none';
+    document.getElementById('nav-all-leaves').style.display = 'none';
+    document.getElementById('nav-btn-users').style.display  = 'none';
+
     if (currentUser.role === 'MANAGER') {
         document.getElementById('nav-pending').style.display    = 'flex';
         document.getElementById('nav-all-leaves').style.display = 'flex';
+        document.getElementById('nav-btn-users').style.display  = 'flex';
     }
 
-    // Init Bootstrap modal
+    // Init Bootstrap modals
     bsApproveModal = new bootstrap.Modal(document.getElementById('approve-modal'));
+    bsRejectModal  = new bootstrap.Modal(document.getElementById('reject-modal'));
 
     showPage('dashboard');
 }
+
+
+
+
+
+
+
+
+
 //logout js
 function logout() {
     currentUser = null;
+
+    // Reset manager-only nav items so they are hidden for the next login
+    document.getElementById('nav-pending').style.display    = 'none';
+    document.getElementById('nav-all-leaves').style.display = 'none';
+    document.getElementById('nav-btn-users').style.display  = 'none';
+
     document.getElementById('app-page').style.display  = 'none';
     document.getElementById('auth-page').style.display = 'flex';
     showToast('Logged out successfully', 'info');
@@ -212,41 +245,49 @@ function buildLeaveTable(leaves, showApproveBtn = false) {
     }
 
     const rows = leaves.map(leave => `
-            <tr>
-                <td class="text-muted small">${leave.id || '—'}</td>
-                <td><span class="fw-semibold">${leave.leaveType || leave.type || '—'}</span></td>
-                <td>${leave.startDate || '—'}</td>
-                <td>${leave.endDate   || '—'}</td>
-                <td class="text-truncate" style="max-width:160px">${leave.reason || '—'}</td>
-                <td>${buildBadge(leave.status)}</td>
-                ${showApproveBtn
+        <tr>
+            <td class="text-muted small">${leave.id || '—'}</td>
+            <td class="fw-semibold">${leave.user?.name || '—'}</td>
+            <td><span class="fw-semibold">${leave.leaveType || leave.type || '—'}</span></td>
+            <td>${leave.startDate || '—'}</td>
+            <td>${leave.endDate || '—'}</td>
+            <td class="text-truncate" style="max-width:160px">${leave.reason || '—'}</td>
+            <td>${buildBadge(leave.status)}</td>
+
+            ${showApproveBtn
         ? (leave.status === 'PENDING'
-            ? `<td><button class="btn btn-success btn-sm" onclick="openApproveModal(${leave.id})">
-                                <i class="bi bi-check-lg me-1"></i>Approve
-                            </button></td>`
+            ? `<td class="d-flex gap-1">
+                    <button class="btn btn-success btn-sm" onclick="openApproveModal(${leave.id})">
+                        <i class="bi bi-check-lg me-1"></i>Approve
+                    </button>
+                    <button class="btn btn-danger btn-sm" onclick="openRejectModal(${leave.id})">
+                        <i class="bi bi-x-lg me-1"></i>Reject
+                    </button>
+               </td>`
             : '<td><span class="text-muted">—</span></td>')
         : ''}
-            </tr>
-        `).join('');
+        </tr>
+    `).join('');
 
     return `
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th>ID</th>
-                            <th>Type</th>
-                            <th>Start</th>
-                            <th>End</th>
-                            <th>Reason</th>
-                            <th>Status</th>
-                            ${showApproveBtn ? '<th>Action</th>' : ''}
-                        </tr>
-                    </thead>
-                    <tbody>${rows}</tbody>
-                </table>
-            </div>
-        `;
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>ID</th>
+                        <th>User</th>
+                        <th>Type</th>
+                        <th>Start</th>
+                        <th>End</th>
+                        <th>Reason</th>
+                        <th>Status</th>
+                        ${showApproveBtn ? '<th>Action</th>' : ''}
+                    </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+            </table>
+        </div>
+    `;
 }
 
 
@@ -266,13 +307,10 @@ async function loadDashboard() {
     try {
         let leaves = [];
 
-        try {
-            const data = await apiCall('/leaves/all');
-            leaves = Array.isArray(data) ? data : (data.leaves || []);
-        } catch {
-            const data = await apiCall('/leaves/my');
-            leaves = Array.isArray(data) ? data : (data.leaves || []);
-        }
+        // Use the correct endpoint based on role
+        const endpoint = (currentUser && currentUser.role === 'MANAGER') ? '/leaves/all' : '/leaves/my';
+        const data = await apiCall(endpoint);
+        leaves = Array.isArray(data) ? data : (data.leaves || []);
 
         document.getElementById('stat-total').textContent    = leaves.length;
         document.getElementById('stat-pending').textContent  = leaves.filter(l => l.status === 'PENDING').length;
@@ -524,16 +562,23 @@ async function loadAllLeaves() {
     }
 }
 
+
+// Approve system
+
+
 function openApproveModal(leaveId) {
     approveLeaveId = leaveId;
     document.getElementById('manager-id-input').value = currentUser.id || '';
     if (bsApproveModal) bsApproveModal.show();
 }
 
-function closeModal() {
+function closeApproveModal() {
     if (bsApproveModal) bsApproveModal.hide();
     approveLeaveId = null;
 }
+
+
+function closeModal() { closeApproveModal(); }
 
 async function confirmApprove() {
     const managerId = document.getElementById('manager-id-input').value;
@@ -545,9 +590,55 @@ async function confirmApprove() {
         });
 
         showToast('Leave approved successfully!', 'success');
-        closeModal();
+        closeApproveModal();
         loadPending();
     } catch(e) {
         showToast(e.message, 'error');
+    }
+}
+
+
+// rejection system
+
+
+function openRejectModal(leaveId) {
+    rejectLeaveId = leaveId;
+    document.getElementById('reject-manager-id-input').value = currentUser.id || '';
+    if (bsRejectModal) bsRejectModal.show();
+}
+
+function closeRejectModal() {
+    if (bsRejectModal) bsRejectModal.hide();
+    rejectLeaveId = null;
+}
+
+async function confirmReject() {
+    const managerId = document.getElementById('reject-manager-id-input').value;
+    if (!managerId) return showToast('Please enter your Manager ID', 'error');
+
+    try {
+        await apiCall('/leaves/reject/' + rejectLeaveId + '?managerId=' + managerId, {
+            method: 'PUT'
+        });
+
+        showToast('Leave rejected successfully!', 'success');
+        closeRejectModal();
+        loadPending();
+    } catch(e) {
+        showToast(e.message, 'error');
+    }
+}
+
+
+async function rejectLeave(id) {
+    if (!confirm('Are you sure you want to reject this leave?')) return;
+
+    try {
+        await apiCall('/leaves/reject/' + id, { method: 'PUT' });
+        showToast('Leave rejected successfully!', 'success');
+        loadPending();
+    } catch (err) {
+        showToast(err.message || 'Error rejecting leave', 'error');
+        console.error(err);
     }
 }
