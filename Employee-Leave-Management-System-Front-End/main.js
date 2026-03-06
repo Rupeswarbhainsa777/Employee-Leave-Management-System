@@ -219,3 +219,84 @@ function showPage(pageName) {
         loadAllLeaves();
     }
 }
+
+function buildLeaveTable(leaves, showApproveBtn = false) {
+    if (!leaves || leaves.length === 0) {
+        return '<div class="text-center text-muted py-4"><i class="bi bi-inbox fs-3 d-block mb-2"></i>No leave records found.</div>';
+    }
+
+    const rows = leaves.map(leave => `
+            <tr>
+                <td class="text-muted small">${leave.id || '—'}</td>
+                <td><span class="fw-semibold">${leave.leaveType || leave.type || '—'}</span></td>
+                <td>${leave.startDate || '—'}</td>
+                <td>${leave.endDate   || '—'}</td>
+                <td class="text-truncate" style="max-width:160px">${leave.reason || '—'}</td>
+                <td>${buildBadge(leave.status)}</td>
+                ${showApproveBtn
+        ? (leave.status === 'PENDING'
+            ? `<td><button class="btn btn-success btn-sm" onclick="openApproveModal(${leave.id})">
+                                <i class="bi bi-check-lg me-1"></i>Approve
+                            </button></td>`
+            : '<td><span class="text-muted">—</span></td>')
+        : ''}
+            </tr>
+        `).join('');
+
+    return `
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Type</th>
+                            <th>Start</th>
+                            <th>End</th>
+                            <th>Reason</th>
+                            <th>Status</th>
+                            ${showApproveBtn ? '<th>Action</th>' : ''}
+                        </tr>
+                    </thead>
+                    <tbody>${rows}</tbody>
+                </table>
+            </div>
+        `;
+}
+
+
+
+function buildBadge(status) {
+    const s   = (status || 'PENDING').toUpperCase();
+    const cls = s === 'APPROVED' ? 'status-approved'
+        : s === 'REJECTED' ? 'status-rejected'
+            : 'status-pending';
+    return `<span class="status-badge ${cls}">${s}</span>`;
+}
+
+
+
+
+async function loadDashboard() {
+    try {
+        let leaves = [];
+
+        try {
+            const data = await apiCall('/leaves/all');
+            leaves = Array.isArray(data) ? data : (data.leaves || []);
+        } catch {
+            const data = await apiCall('/leaves/my');
+            leaves = Array.isArray(data) ? data : (data.leaves || []);
+        }
+
+        document.getElementById('stat-total').textContent    = leaves.length;
+        document.getElementById('stat-pending').textContent  = leaves.filter(l => l.status === 'PENDING').length;
+        document.getElementById('stat-approved').textContent = leaves.filter(l => l.status === 'APPROVED').length;
+        document.getElementById('stat-rejected').textContent = leaves.filter(l => l.status === 'REJECTED').length;
+
+        document.getElementById('dash-table').innerHTML = buildLeaveTable(leaves.slice(0, 8));
+
+    } catch(e) {
+        document.getElementById('dash-table').innerHTML =
+            '<div class="text-center text-muted py-4">Could not load data.</div>';
+    }
+}

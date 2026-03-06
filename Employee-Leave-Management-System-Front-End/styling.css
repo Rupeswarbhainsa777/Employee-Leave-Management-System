@@ -77,3 +77,14 @@ body {
 
 .sidebar-user-name { color: #f1f5f9; font-weight: 600; font-size: 0.875rem; }
 .sidebar-user-role { color: #64748b; font-size: 0.75rem; }
+.app-layout { display: flex; min-height: 100vh; }
+
+.main-content {
+    flex: 1;
+    padding: 2rem;
+    overflow-y: auto;
+    background: #f0f4f8;
+}
+
+.page { display: none; }
+.page.active { display: block; }
