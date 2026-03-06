@@ -79,4 +79,27 @@ public class LeaveService {
     public List<LeaveRequest> getLeavesByUser(Long userId) {
         return leaveRepository.findByUserId(userId);
     }
+
+
+    public LeaveRequest rejectLeave(Long leaveId, String email) {
+
+        User manager = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Only manager can reject
+        if (!manager.getRole().equalsIgnoreCase("MANAGER")) {
+            throw new RuntimeException("Only Manager can reject leave");
+        }
+
+        LeaveRequest leave = leaveRepository.findById(leaveId)
+                .orElseThrow(() -> new RuntimeException("Leave not found"));
+
+        if (leave.getStatus().equalsIgnoreCase("REJECTED")) {
+            throw new RuntimeException("Leave already rejected");
+        }
+
+        leave.setStatus("REJECTED");
+
+        return leaveRepository.save(leave);
+    }
 }

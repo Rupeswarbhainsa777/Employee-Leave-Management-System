@@ -46,6 +46,10 @@ public class LeaveController {
                 leaveService.approveLeave(id, principal.getName())
         );
     }
+    @PutMapping("/reject/{id}")
+    public ResponseEntity<?> rejectLeave(@PathVariable Long id, Principal principal) {
+        return ResponseEntity.ok(leaveService.rejectLeave(id, principal.getName()));
+    }
 
     @GetMapping("/pending")
     public ResponseEntity<List<LeaveRequest>> getPending(){
