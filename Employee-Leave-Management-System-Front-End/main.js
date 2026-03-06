@@ -511,3 +511,18 @@ async function loadUsers() {
             `<div class="text-center text-danger py-4">${e.message}</div>`;
     }
 }
+
+
+async function loadPending() {
+    document.getElementById('pending-table').innerHTML = '<div class="text-center text-muted py-4">Loading...</div>';
+    try {
+        const data   = await apiCall('/leaves/pending');
+        const leaves = Array.isArray(data) ? data : (data.leaves || []);
+        document.getElementById('pending-table').innerHTML = buildLeaveTable(leaves, true);
+    } catch(e) {
+        document.getElementById('pending-table').innerHTML =
+            `<div class="text-center text-danger py-4">${e.message}</div>`;
+    }
+}
+
+
