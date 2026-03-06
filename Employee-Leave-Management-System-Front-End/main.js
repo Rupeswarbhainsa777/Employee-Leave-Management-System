@@ -330,3 +330,16 @@ async function applyLeave() {
         showToast(e.message, 'error');
     }
 }
+
+
+async function loadMyLeaves() {
+    document.getElementById('my-leaves-table').innerHTML = '<div class="text-center text-muted py-4">Loading...</div>';
+    try {
+        const data   = await apiCall('/leaves/my');
+        const leaves = Array.isArray(data) ? data : (data.leaves || []);
+        document.getElementById('my-leaves-table').innerHTML = buildLeaveTable(leaves);
+    } catch(e) {
+        document.getElementById('my-leaves-table').innerHTML =
+            `<div class="text-center text-danger py-4">${e.message}</div>`;
+    }
+}
