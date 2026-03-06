@@ -12,62 +12,70 @@ let calMonth = new Date().getMonth() + 1;
 
 // Api
 
-async  function apiCall(path,options={}){
-    const headers = {'content-type': 'application/json'};
+async function apiCall(path, options = {}) {
 
-    if(currentUser){
-        const credentials = currentUser.email+':'+currentUser.password;
-        headers['Authorization'] ='Basic' + btoa(credentials);
+    const headers = { 'Content-Type': 'application/json' };
+
+    if (currentUser) {
+        const credentials = currentUser.email + ':' + currentUser.password;
+        headers['Authorization'] = 'Basic ' + btoa(credentials);
     }
+
     const response = await fetch(base_api + path, {
         ...options,
         headers: { ...headers, ...(options.headers || {}) }
     });
 
     let data = null;
+
     try {
         data = await response.json();
-    }
-    catch (error) {}
+    } catch (e) {}
+
     if (!response.ok) {
-        throw  new Error(data?.message || data?.error || 'error'+data?.status );
+        throw new Error(data?.message || "Request Failed");
     }
+
     return data;
 }
 
 
 
 function showToast(message, type = 'info') {
+
     const container = document.getElementById('toast-container');
+    if (!container) return; // prevent crash
 
     const colorMap = {
         success: 'bg-success',
-        error:   'bg-danger',
-        info:    'bg-primary'
+        error: 'bg-danger',
+        info: 'bg-primary'
     };
 
     const iconMap = {
         success: 'bi-check-circle-fill',
-        error:   'bi-x-circle-fill',
-        info:    'bi-info-circle-fill'
+        error: 'bi-x-circle-fill',
+        info: 'bi-info-circle-fill'
     };
 
-    const id = 'toast-' + Date.now();
     const toastEl = document.createElement('div');
-    toastEl.id = id;
+
     toastEl.className = `toast align-items-center text-white ${colorMap[type] || 'bg-primary'} border-0 show`;
-    toastEl.setAttribute('role', 'alert');
+
     toastEl.innerHTML = `
-            <div class="d-flex">
-                <div class="toast-body d-flex align-items-center gap-2">
-                    <i class="bi ${iconMap[type] || 'bi-info-circle-fill'}"></i>
-                    ${message}
-                </div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto" onclick="this.closest('.toast').remove()"></button>
+        <div class="d-flex">
+            <div class="toast-body d-flex align-items-center gap-2">
+                <i class="bi ${iconMap[type] || 'bi-info-circle-fill'}"></i>
+                ${message}
             </div>
-        `;
+            <button class="btn-close btn-close-white me-2 m-auto"
+                onclick="this.closest('.toast').remove()">
+            </button>
+        </div>
+    `;
 
     container.appendChild(toastEl);
+
     setTimeout(() => toastEl.remove(), 3500);
 }
 
@@ -92,7 +100,7 @@ function showAuthTab(tab) {
     }
 }
 
-// reg section
+// reg
 
 async function register() {
     const name     = document.getElementById('reg-name').value.trim();
@@ -165,7 +173,7 @@ function startApp() {
     }
 
     // Init Bootstrap modal
-
+    bsApproveModal = new bootstrap.Modal(document.getElementById('approve-modal'));
 
     showPage('dashboard');
 }
@@ -177,7 +185,7 @@ function logout() {
     showToast('Logged out successfully', 'info');
 }
 
-// ─── SWITCH PAGES ───────────────────────────────────────────────────────────
+// switch section
 function showPage(pageName) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.getElementById('page-' + pageName).classList.add('active');
@@ -187,5 +195,27 @@ function showPage(pageName) {
     const btn = document.getElementById('nav-btn-' + pageName);
     if (btn) btn.classList.add('active');
 
-
+    if (pageName === 'dashboard')
+    {
+        loadDashboard();
+    }
+    if (pageName === 'my-leaves')
+    {
+        loadMyLeaves();
+    }
+    if (pageName === 'balance')    {
+        loadBalance();
+    }
+    if (pageName === 'calendar')  {
+        loadCalendar();
+    }
+    if (pageName === 'users')    {
+        loadUsers();
+    }
+    if (pageName === 'pending')   {
+        loadPending();
+    }
+    if (pageName === 'all-leaves') {
+        loadAllLeaves();
+    }
 }
