@@ -343,3 +343,133 @@ async function loadMyLeaves() {
             `<div class="text-center text-danger py-4">${e.message}</div>`;
     }
 }
+
+
+async function loadBalance() {
+    document.getElementById('balance-content').innerHTML = '<div class="text-center text-muted py-4">Loading...</div>';
+
+    const userId = currentUser.id || currentUser.userId;
+
+    if (!userId) {
+        document.getElementById('balance-content').innerHTML =
+            '<div class="text-center text-warning py-4">User ID not found. Please logout and login again.</div>';
+        return;
+    }
+
+    try {
+        const data = await apiCall('/leave-balance/' + userId);
+
+        const leaveTypes = [
+            { label: 'Vacation',   total: data.vacationTotal,  used: data.vacationUsed,  color: 'primary' },
+            { label: 'Sick Leave', total: data.sickTotal,      used: data.sickUsed,      color: 'danger'  },
+            { label: 'Personal',   total: data.personalTotal,  used: data.personalUsed,  color: 'warning' },
+            { label: 'Emergency',  total: data.emergencyTotal, used: data.emergencyUsed, color: 'info'    },
+        ];
+
+        const list = leaveTypes.filter(t => t.total != null);
+
+        if (!list.length) {
+            document.getElementById('balance-content').innerHTML =
+                '<div class="text-center text-muted py-4">No balance data.</div>';
+            return;
+        }
+
+        const year = data.year ? `<p class="text-muted small mb-3"><i class="bi bi-calendar me-1"></i>Year: ${data.year}</p>` : '';
+
+        const html = list.map(b => {
+            const used      = b.used  || 0;
+            const total     = b.total || 0;
+            const remaining = total - used;
+            const percent   = total ? Math.round((used / total) * 100) : 0;
+
+            return `
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="fw-semibold small">${b.label}</span>
+                            <span class="text-muted small">${remaining} of ${total} days remaining</span>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar bg-${b.color}" role="progressbar"
+                                 style="width:${percent}%"
+                                 aria-valuenow="${percent}" aria-valuemin="0" aria-valuemax="100">
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between mt-1">
+                            <span class="text-muted" style="font-size:0.72rem">Used: ${used}</span>
+                            <span class="text-muted" style="font-size:0.72rem">${percent}%</span>
+                        </div>
+                    </div>
+                `;
+        }).join('');
+
+        document.getElementById('balance-content').innerHTML = year + html;
+    } catch(e) {
+        document.getElementById('balance-content').innerHTML =
+            `<div class="text-center text-danger py-4">${e.message}</div>`;
+    }
+}
+
+
+function changeMonth(delta) {
+    calMonth += delta;
+    if (calMonth > 12) { calMonth = 1;  calYear++; }
+    if (calMonth < 1)  { calMonth = 12; calYear--; }
+    loadCalendar();
+}
+
+
+
+async function loadCalendar() {
+    const monthNames = ['January','February','March','April','May','June',
+        'July','August','September','October','November','December'];
+
+    document.getElementById('cal-label').textContent = monthNames[calMonth - 1] + ' ' + calYear;
+    document.getElementById('cal-grid').innerHTML = '<div class="text-center text-muted py-3">Loading...</div>';
+
+    try {
+        const data   = await apiCall('/leaves/calendar?year=' + calYear + '&month=' + calMonth);
+        const leaves = Array.isArray(data) ? data : (data.leaves || []);
+
+        const leaveDays = new Set();
+        leaves.forEach(leave => {
+            const startDate = new Date(leave.startDate);
+            const endDate   = new Date(leave.endDate);
+            for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+                leaveDays.add(d.getDate());
+            }
+        });
+
+        const today       = new Date();
+        const daysInMonth = new Date(calYear, calMonth, 0).getDate();
+        const firstDay    = new Date(calYear, calMonth - 1, 1).getDay();
+
+        const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+        let html = '<div class="cal-grid">';
+        dayNames.forEach(d => { html += `<div class="cal-day-name">${d}</div>`; });
+
+        for (let i = 0; i < firstDay; i++) {
+            html += '<div class="cal-day"></div>';
+        }
+
+        for (let day = 1; day <= daysInMonth; day++) {
+            const isLeave = leaveDays.has(day);
+            const isToday = today.getDate() === day &&
+                today.getMonth() + 1 === calMonth &&
+                today.getFullYear() === calYear;
+
+            let cls = 'cal-day';
+            if (isLeave) cls += ' on-leave';
+            if (isToday) cls += ' today';
+
+            html += `<div class="${cls}">${day}</div>`;
+        }
+
+        html += '</div>';
+        document.getElementById('cal-grid').innerHTML = html;
+
+    } catch(e) {
+        document.getElementById('cal-grid').innerHTML =
+            `<div class="text-center text-danger py-3">${e.message}</div>`;
+    }
+}
