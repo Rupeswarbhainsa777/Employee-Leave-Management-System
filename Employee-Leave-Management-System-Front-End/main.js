@@ -473,3 +473,41 @@ async function loadCalendar() {
             `<div class="text-center text-danger py-3">${e.message}</div>`;
     }
 }
+
+
+async function loadUsers() {
+    document.getElementById('users-table').innerHTML = '<div class="text-center text-muted py-4">Loading...</div>';
+    try {
+        const data  = await apiCall('/user/alluser');
+        const users = Array.isArray(data) ? data : (data.users || []);
+
+        if (!users.length) {
+            document.getElementById('users-table').innerHTML =
+                '<div class="text-center text-muted py-4">No users found.</div>';
+            return;
+        }
+
+        const rows = users.map(u => `
+                <tr>
+                    <td class="text-muted small">${u.id || '—'}</td>
+                    <td><strong>${u.name || '—'}</strong></td>
+                    <td>${u.email || '—'}</td>
+                    <td>${buildBadge(u.role || 'EMPLOYEE')}</td>
+                </tr>
+            `).join('');
+
+        document.getElementById('users-table').innerHTML = `
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr><th>ID</th><th>Name</th><th>Email</th><th>Role</th></tr>
+                        </thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                </div>
+            `;
+    } catch(e) {
+        document.getElementById('users-table').innerHTML =
+            `<div class="text-center text-danger py-4">${e.message}</div>`;
+    }
+}
