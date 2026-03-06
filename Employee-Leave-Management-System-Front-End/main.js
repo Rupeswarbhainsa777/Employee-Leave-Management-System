@@ -190,34 +190,20 @@ function showPage(pageName) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.getElementById('page-' + pageName).classList.add('active');
 
-    // Reset all nav buttons
     document.querySelectorAll('.nav-item-btn').forEach(b => b.classList.remove('active'));
-    const btn = document.getElementById('nav-btn-' + pageName);
+
+    // Correctly get button, check both ID patterns
+    let btn = document.getElementById('nav-btn-' + pageName) || document.getElementById('nav-' + pageName);
     if (btn) btn.classList.add('active');
 
-    if (pageName === 'dashboard')
-    {
-        loadDashboard();
-    }
-    if (pageName === 'my-leaves')
-    {
-        loadMyLeaves();
-    }
-    if (pageName === 'balance')    {
-        loadBalance();
-    }
-    if (pageName === 'calendar')  {
-        loadCalendar();
-    }
-    if (pageName === 'users')    {
-        loadUsers();
-    }
-    if (pageName === 'pending')   {
-        loadPending();
-    }
-    if (pageName === 'all-leaves') {
-        loadAllLeaves();
-    }
+    // Load page data
+    if (pageName === 'dashboard') loadDashboard();
+    if (pageName === 'my-leaves') loadMyLeaves();
+    if (pageName === 'balance') loadBalance();
+    if (pageName === 'calendar') loadCalendar();
+    if (pageName === 'users') loadUsers();
+    if (pageName === 'pending') loadPending();
+    if (pageName === 'all-leaves') loadAllLeaves();
 }
 
 function buildLeaveTable(leaves, showApproveBtn = false) {
@@ -311,7 +297,7 @@ async function applyLeave() {
     if (!startDate || !endDate || !reason) {
         return showToast('Please fill all fields', 'error');
     }
-    if (startDate > endDate) {
+    if (new Date(startDate) > new Date(endDate)) {
         return showToast('End date must be after start date', 'error');
     }
 
@@ -526,3 +512,42 @@ async function loadPending() {
 }
 
 
+async function loadAllLeaves() {
+    document.getElementById('all-leaves-table').innerHTML = '<div class="text-center text-muted py-4">Loading...</div>';
+    try {
+        const data   = await apiCall('/leaves/all');
+        const leaves = Array.isArray(data) ? data : (data.leaves || []);
+        document.getElementById('all-leaves-table').innerHTML = buildLeaveTable(leaves);
+    } catch(e) {
+        document.getElementById('all-leaves-table').innerHTML =
+            `<div class="text-center text-danger py-4">${e.message}</div>`;
+    }
+}
+
+function openApproveModal(leaveId) {
+    approveLeaveId = leaveId;
+    document.getElementById('manager-id-input').value = currentUser.id || '';
+    if (bsApproveModal) bsApproveModal.show();
+}
+
+function closeModal() {
+    if (bsApproveModal) bsApproveModal.hide();
+    approveLeaveId = null;
+}
+
+async function confirmApprove() {
+    const managerId = document.getElementById('manager-id-input').value;
+    if (!managerId) return showToast('Please enter your Manager ID', 'error');
+
+    try {
+        await apiCall('/leaves/approve/' + approveLeaveId + '?managerId=' + managerId, {
+            method: 'PUT'
+        });
+
+        showToast('Leave approved successfully!', 'success');
+        closeModal();
+        loadPending();
+    } catch(e) {
+        showToast(e.message, 'error');
+    }
+}

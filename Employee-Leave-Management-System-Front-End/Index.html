@@ -132,7 +132,9 @@
                 </button>
             </div>
         </div>
-<!--           content area-->
+        <!-- MAIN CONTENT -->
+        <div class="main-content">
+
         <!-- Dashboard Page -->
         <div class="page active" id="page-dashboard">
 
@@ -200,7 +202,7 @@
         </div>
 
 
-        <!-- PAGE: APPLY LEAVE -->
+        <!-- APPLY LEAVE -->
         <div class="page" id="page-apply">
             <h5 class="fw-bold text-dark mb-4">
                 <i class="bi bi-plus-circle me-2 text-primary"></i>Apply for Leave
@@ -306,9 +308,42 @@
                 </div>
             </div>
         </div>
+        <div class="page" id="page-all-leaves">
+            <h5 class="fw-bold text-dark mb-4"><i class="bi bi-folder2-open me-2 text-primary"></i>All Leaves</h5>
+            <div class="card">
+                <div class="card-body p-0">
+                    <div id="all-leaves-table"><div class="text-center text-muted py-4">Loading...</div></div>
+                </div>
+            </div>
+        </div>
 
+        </div>
+    </div>
 
-
+    <div class="modal fade" id="approve-modal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content p-1">
+                <div class="modal-header border-0 pb-0">
+                    <h6 class="modal-title fw-bold">
+                        <i class="bi bi-check2-circle text-success me-2"></i>Approve Leave
+                    </h6>
+                    <button type="button" class="btn-close" onclick="closeModal()"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted small">Enter your Manager ID to confirm approval.</p>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Manager ID</label>
+                        <input type="number" id="manager-id-input" class="form-control" placeholder="e.g. 2" />
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button class="btn btn-outline-secondary" onclick="closeModal()">Cancel</button>
+                    <button class="btn btn-success fw-semibold" onclick="confirmApprove()">
+                        <i class="bi bi-check-lg me-1"></i>Approve
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
 
@@ -317,8 +352,8 @@
 <div id="toast-container"
      style="position: fixed; top: 20px; right: 20px; z-index: 9999;">
 </div>
-<script src="main.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="main.js"></script>
 
 </body>
 
