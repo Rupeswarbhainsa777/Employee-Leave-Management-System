@@ -300,3 +300,33 @@ async function loadDashboard() {
             '<div class="text-center text-muted py-4">Could not load data.</div>';
     }
 }
+
+
+async function applyLeave() {
+    const leaveType = document.getElementById('leave-type').value;
+    const startDate = document.getElementById('leave-start').value;
+    const endDate   = document.getElementById('leave-end').value;
+    const reason    = document.getElementById('leave-reason').value.trim();
+
+    if (!startDate || !endDate || !reason) {
+        return showToast('Please fill all fields', 'error');
+    }
+    if (startDate > endDate) {
+        return showToast('End date must be after start date', 'error');
+    }
+
+    try {
+        await apiCall('/leaves', {
+            method: 'POST',
+            body: JSON.stringify({ leaveType, startDate, endDate, reason })
+        });
+
+        showToast('Leave request submitted!', 'success');
+        document.getElementById('leave-start').value  = '';
+        document.getElementById('leave-end').value    = '';
+        document.getElementById('leave-reason').value = '';
+        showPage('my-leaves');
+    } catch(e) {
+        showToast(e.message, 'error');
+    }
+}
